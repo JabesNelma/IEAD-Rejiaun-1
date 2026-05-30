@@ -7,9 +7,9 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { ChurchReport, REGIONS, MONTHS, generateId, calculateTotalRevenue, calculateTotalExpense, calculateBalance, formatUSD } from '@/lib/data'
+import { ChurchReport, OsanTamaEntry, GastuEntry, REGIONS, MONTHS, generateId, calculateTotalRevenue, calculateTotalExpense, calculateBalance, formatUSD } from '@/lib/data'
 import { SummaryCard } from './SummaryCard'
-import { TrendingUp, TrendingDown, Wallet, Plus, CheckCircle } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, Plus, CheckCircle, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface ReportFormProps {
@@ -25,14 +25,8 @@ export function ReportForm({ onSubmit }: ReportFormProps) {
     region: '',
     month: '',
     year: currentYear,
-    persembahan: 0,
-    perpuluhan: 0,
-    donasaun: 0,
-    osanTamaSeluk: 0,
-    operasional: 0,
-    manutensaun: 0,
-    programaMinisteriu: 0,
-    gastuSeluk: 0,
+    osanTama: [],
+    gastu: [],
   })
 
   const [submitted, setSubmitted] = useState(false)
@@ -41,11 +35,62 @@ export function ReportForm({ onSubmit }: ReportFormProps) {
   const totalExpense = useMemo(() => calculateTotalExpense(formData), [formData])
   const balance = useMemo(() => calculateBalance(formData), [formData])
 
-  const handleNumberInput = (field: keyof ChurchReport, value: string) => {
-    const numValue = parseFloat(value) || 0
-    if (numValue >= 0) {
-      setFormData((prev) => ({ ...prev, [field]: numValue }))
+  // Osan Tama handlers
+  const addOsanTamaEntry = () => {
+    const newEntry: OsanTamaEntry = {
+      id: generateId(),
+      deskrisaun: '',
+      montante: 0,
     }
+    setFormData((prev) => ({
+      ...prev,
+      osanTama: [...(prev.osanTama || []), newEntry],
+    }))
+  }
+
+  const updateOsanTamaEntry = (id: string, field: keyof OsanTamaEntry, value: string | number) => {
+    setFormData((prev) => ({
+      ...prev,
+      osanTama: prev.osanTama?.map((entry) =>
+        entry.id === id ? { ...entry, [field]: field === 'montante' ? parseFloat(value as string) || 0 : value } : entry
+      ),
+    }))
+  }
+
+  const removeOsanTamaEntry = (id: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      osanTama: prev.osanTama?.filter((entry) => entry.id !== id),
+    }))
+  }
+
+  // Gastu handlers
+  const addGastuEntry = () => {
+    const newEntry: GastuEntry = {
+      id: generateId(),
+      gastuBaSaida: '',
+      montante: 0,
+    }
+    setFormData((prev) => ({
+      ...prev,
+      gastu: [...(prev.gastu || []), newEntry],
+    }))
+  }
+
+  const updateGastuEntry = (id: string, field: keyof GastuEntry, value: string | number) => {
+    setFormData((prev) => ({
+      ...prev,
+      gastu: prev.gastu?.map((entry) =>
+        entry.id === id ? { ...entry, [field]: field === 'montante' ? parseFloat(value as string) || 0 : value } : entry
+      ),
+    }))
+  }
+
+  const removeGastuEntry = (id: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      gastu: prev.gastu?.filter((entry) => entry.id !== id),
+    }))
   }
 
   const handleSubmit = () => {
@@ -62,14 +107,8 @@ export function ReportForm({ onSubmit }: ReportFormProps) {
       region: formData.region!,
       month: formData.month!,
       year: formData.year!,
-      persembahan: formData.persembahan || 0,
-      perpuluhan: formData.perpuluhan || 0,
-      donasaun: formData.donasaun || 0,
-      osanTamaSeluk: formData.osanTamaSeluk || 0,
-      operasional: formData.operasional || 0,
-      manutensaun: formData.manutensaun || 0,
-      programaMinisteriu: formData.programaMinisteriu || 0,
-      gastuSeluk: formData.gastuSeluk || 0,
+      osanTama: formData.osanTama || [],
+      gastu: formData.gastu || [],
     }
 
     onSubmit?.(newReport)
@@ -85,14 +124,8 @@ export function ReportForm({ onSubmit }: ReportFormProps) {
         region: '',
         month: '',
         year: currentYear,
-        persembahan: 0,
-        perpuluhan: 0,
-        donasaun: 0,
-        osanTamaSeluk: 0,
-        operasional: 0,
-        manutensaun: 0,
-        programaMinisteriu: 0,
-        gastuSeluk: 0,
+        osanTama: [],
+        gastu: [],
       })
       setSubmitted(false)
     }, 2000)
@@ -119,7 +152,7 @@ export function ReportForm({ onSubmit }: ReportFormProps) {
                 <Label htmlFor="churchName">Naran Igreja</Label>
                 <Input
                   id="churchName"
-                  placeholder="Hatan: Igreja Dili Centro"
+                  placeholder="Hatan: Igreja Baucau Centro"
                   value={formData.churchName || ''}
                   onChange={(e) => setFormData((prev) => ({ ...prev, churchName: e.target.value }))}
                 />
@@ -183,78 +216,71 @@ export function ReportForm({ onSubmit }: ReportFormProps) {
 
           <Separator />
 
-          {/* Revenue Section */}
+          {/* Revenue Section - Dynamic */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-green-700 uppercase tracking-wide flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Osan Tama (Receita)
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="persembahan">Persembahan</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                  <Input
-                    id="persembahan"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.persembahan || ''}
-                    onChange={(e) => handleNumberInput('persembahan', e.target.value)}
-                    className="pl-7"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="perpuluhan">Perpuluhan</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                  <Input
-                    id="perpuluhan"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.perpuluhan || ''}
-                    onChange={(e) => handleNumberInput('perpuluhan', e.target.value)}
-                    className="pl-7"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="donasaun">Donasaun</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                  <Input
-                    id="donasaun"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.donasaun || ''}
-                    onChange={(e) => handleNumberInput('donasaun', e.target.value)}
-                    className="pl-7"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="osanTamaSeluk">Osan Tama Seluk</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                  <Input
-                    id="osanTamaSeluk"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.osanTamaSeluk || ''}
-                    onChange={(e) => handleNumberInput('osanTamaSeluk', e.target.value)}
-                    className="pl-7"
-                  />
-                </div>
-              </div>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-green-700 uppercase tracking-wide flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                Osan Tama (Receita)
+              </h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addOsanTamaEntry}
+                className="text-green-600 border-green-300 hover:bg-green-50"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Aumenta Osan Tama
+              </Button>
             </div>
+
+            {/* Dynamic entries */}
+            <div className="space-y-3">
+              {formData.osanTama && formData.osanTama.length > 0 ? (
+                formData.osanTama.map((entry, index) => (
+                  <div key={entry.id} className="flex gap-3 items-start bg-green-50 p-3 rounded-lg border border-green-100">
+                    <div className="flex-1 space-y-2">
+                      <Label className="text-xs text-green-700">Deskrisaun</Label>
+                      <Input
+                        placeholder="Hatan: Persembahan Minggu, Perpuluhan..."
+                        value={entry.deskrisaun}
+                        onChange={(e) => updateOsanTamaEntry(entry.id, 'deskrisaun', e.target.value)}
+                      />
+                    </div>
+                    <div className="w-40 space-y-2">
+                      <Label className="text-xs text-green-700">Montante (USD)</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={entry.montante || ''}
+                          onChange={(e) => updateOsanTamaEntry(entry.id, 'montante', e.target.value)}
+                          className="pl-7"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeOsanTamaEntry(entry.id)}
+                      className="mt-6 text-red-500 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                  <p className="text-gray-500 text-sm">Klik "Aumenta Osan Tama" atu hatama dados</p>
+                </div>
+              )}
+            </div>
+
             <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-right">
               <span className="text-sm text-green-700">Total Osan Tama: </span>
               <span className="font-bold text-green-700">{formatUSD(totalRevenue)}</span>
@@ -263,78 +289,71 @@ export function ReportForm({ onSubmit }: ReportFormProps) {
 
           <Separator />
 
-          {/* Expense Section */}
+          {/* Expense Section - Dynamic */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-red-700 uppercase tracking-wide flex items-center gap-2">
-              <TrendingDown className="w-4 h-4" />
-              Gastu (Despesa)
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="operasional">Operasional</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                  <Input
-                    id="operasional"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.operasional || ''}
-                    onChange={(e) => handleNumberInput('operasional', e.target.value)}
-                    className="pl-7"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="manutensaun">Manutensaun Igreja</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                  <Input
-                    id="manutensaun"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.manutensaun || ''}
-                    onChange={(e) => handleNumberInput('manutensaun', e.target.value)}
-                    className="pl-7"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="programaMinisteriu">Programa Ministeriu</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                  <Input
-                    id="programaMinisteriu"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.programaMinisteriu || ''}
-                    onChange={(e) => handleNumberInput('programaMinisteriu', e.target.value)}
-                    className="pl-7"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="gastuSeluk">Gastu Seluk</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                  <Input
-                    id="gastuSeluk"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.gastuSeluk || ''}
-                    onChange={(e) => handleNumberInput('gastuSeluk', e.target.value)}
-                    className="pl-7"
-                  />
-                </div>
-              </div>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-red-700 uppercase tracking-wide flex items-center gap-2">
+                <TrendingDown className="w-4 h-4" />
+                Gastu (Despesa)
+              </h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addGastuEntry}
+                className="text-red-600 border-red-300 hover:bg-red-50"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Aumenta Gastu
+              </Button>
             </div>
+
+            {/* Dynamic entries */}
+            <div className="space-y-3">
+              {formData.gastu && formData.gastu.length > 0 ? (
+                formData.gastu.map((entry, index) => (
+                  <div key={entry.id} className="flex gap-3 items-start bg-red-50 p-3 rounded-lg border border-red-100">
+                    <div className="flex-1 space-y-2">
+                      <Label className="text-xs text-red-700">Gastu ba Saida</Label>
+                      <Input
+                        placeholder="Hatan: Lista Kirista, Operasional, Materia..."
+                        value={entry.gastuBaSaida}
+                        onChange={(e) => updateGastuEntry(entry.id, 'gastuBaSaida', e.target.value)}
+                      />
+                    </div>
+                    <div className="w-40 space-y-2">
+                      <Label className="text-xs text-red-700">Montante (USD)</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={entry.montante || ''}
+                          onChange={(e) => updateGastuEntry(entry.id, 'montante', e.target.value)}
+                          className="pl-7"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeGastuEntry(entry.id)}
+                      className="mt-6 text-red-500 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                  <p className="text-gray-500 text-sm">Klik "Aumenta Gastu" atu hatama dados</p>
+                </div>
+              )}
+            </div>
+
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-right">
               <span className="text-sm text-red-700">Total Gastu: </span>
               <span className="font-bold text-red-700">{formatUSD(totalExpense)}</span>

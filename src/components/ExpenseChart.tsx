@@ -11,11 +11,9 @@ interface ExpenseChartProps {
 
 export function ExpenseChart({ reports }: ExpenseChartProps) {
   const data = reports.map((report) => ({
-    name: report.churchName.replace('Igreja ', '').substring(0, 10),
+    name: report.churchName.replace('Igreja ', '').substring(0, 12),
     fullName: report.churchName,
     expense: calculateTotalExpense(report),
-    operasional: report.operasional,
-    manutensaun: report.manutensaun,
   }))
 
   return (
@@ -41,7 +39,7 @@ export function ExpenseChart({ reports }: ExpenseChartProps) {
                 angle={-45}
                 textAnchor="end"
                 height={60}
-                tick={{ fill: '#6b7280', fontSize: 11 }}
+                tick={{ fill: '#6b7280', fontSize: 10 }}
               />
               <YAxis
                 tick={{ fill: '#6b7280', fontSize: 11 }}

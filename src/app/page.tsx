@@ -2,6 +2,7 @@
 
 import { Church, Building2 } from 'lucide-react'
 import { RoleCard } from '@/components/RoleCard'
+import { CommentSection } from '@/components/CommentSection'
 
 export default function HomePage() {
   return (
@@ -40,7 +41,7 @@ export default function HomePage() {
 
       {/* Role Selection Section */}
       <div className="flex-1 py-12 sm:py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="text-center mb-8">
             <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
               Hili Aksesu
@@ -53,16 +54,21 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <RoleCard
               icon={Building2}
-              title="Admin Nasional"
-              description="Haree no monitoriza relatóriu finanseiru husi igreja hotu-hotu iha nível nasional."
-              href="/nasional"
+              title="Admin Regional"
+              description="Haree no monitoriza relatóriu finanseiru husi igreja hotu-hotu iha nível regional."
+              href="/regional"
             />
             <RoleCard
               icon={Church}
-              title="Admin Regional"
+              title="Admin Lokal"
               description="Hatama relatóriu finanseiru ba igreja ida ho detalla osan tama no gastu."
-              href="/regional"
+              href="/lokal"
             />
+          </div>
+
+          {/* Comment Section */}
+          <div className="mt-8">
+            <CommentSection page="landing" />
           </div>
         </div>
       </div>

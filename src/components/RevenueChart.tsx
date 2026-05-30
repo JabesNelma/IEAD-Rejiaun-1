@@ -11,11 +11,9 @@ interface RevenueChartProps {
 
 export function RevenueChart({ reports }: RevenueChartProps) {
   const data = reports.map((report) => ({
-    name: report.churchName.replace('Igreja ', '').substring(0, 10),
+    name: report.churchName.replace('Igreja ', '').substring(0, 12),
     fullName: report.churchName,
     revenue: calculateTotalRevenue(report),
-    persembahan: report.persembahan,
-    perpuluhan: report.perpuluhan,
   }))
 
   return (
@@ -41,7 +39,7 @@ export function RevenueChart({ reports }: RevenueChartProps) {
                 angle={-45}
                 textAnchor="end"
                 height={60}
-                tick={{ fill: '#6b7280', fontSize: 11 }}
+                tick={{ fill: '#6b7280', fontSize: 10 }}
               />
               <YAxis
                 tick={{ fill: '#6b7280', fontSize: 11 }}

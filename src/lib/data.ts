@@ -6,37 +6,42 @@ export interface ChurchReport {
   month: string
   year: number
 
-  // Revenue fields
-  persembahan: number
-  perpuluhan: number
-  donasaun: number
-  osanTamaSeluk: number
+  // Dynamic revenue entries
+  osanTama: OsanTamaEntry[]
 
-  // Expense fields
-  operasional: number
-  manutensaun: number
-  programaMinisteriu: number
-  gastuSeluk: number
+  // Dynamic expense entries
+  gastu: GastuEntry[]
 }
 
-// Regions in Timor-Leste
+// Dynamic revenue entry
+export interface OsanTamaEntry {
+  id: string
+  deskrisaun: string
+  montante: number
+}
+
+// Dynamic expense entry
+export interface GastuEntry {
+  id: string
+  gastuBaSaida: string
+  montante: number
+}
+
+// Comment interface
+export interface Comment {
+  id: string
+  page: 'landing' | 'regional' | 'nasional'
+  author: string
+  content: string
+  timestamp: Date
+}
+
+// Regions - Updated to only 4 regions
 export const REGIONS = [
-  'Dili',
   'Baucau',
-  'Same',
-  'Liquiça',
-  'Maliana',
-  'Suai',
-  'Aileu',
-  'Manatuto',
-  'Oecusse',
+  'Lospalos',
   'Viqueque',
-  'Ermera',
-  'Ainaro',
-  'Lautém',
-  'Bobonaro',
-  'Cova Lima',
-  'Manufahi',
+  'Manatuto',
 ] as const
 
 export type Region = (typeof REGIONS)[number]
@@ -61,27 +66,23 @@ export type Month = (typeof MONTHS)[number]
 
 // Generate unique ID
 export const generateId = (): string => {
-  return `report-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
 // Calculate total revenue
 export const calculateTotalRevenue = (report: Partial<ChurchReport>): number => {
-  return (
-    (report.persembahan || 0) +
-    (report.perpuluhan || 0) +
-    (report.donasaun || 0) +
-    (report.osanTamaSeluk || 0)
-  )
+  if (report.osanTama && report.osanTama.length > 0) {
+    return report.osanTama.reduce((sum, entry) => sum + (entry.montante || 0), 0)
+  }
+  return 0
 }
 
 // Calculate total expenses
 export const calculateTotalExpense = (report: Partial<ChurchReport>): number => {
-  return (
-    (report.operasional || 0) +
-    (report.manutensaun || 0) +
-    (report.programaMinisteriu || 0) +
-    (report.gastuSeluk || 0)
-  )
+  if (report.gastu && report.gastu.length > 0) {
+    return report.gastu.reduce((sum, entry) => sum + (entry.montante || 0), 0)
+  }
+  return 0
 }
 
 // Calculate balance
@@ -99,159 +100,197 @@ export const formatUSD = (amount: number): string => {
   }).format(amount)
 }
 
-// Dummy data for 10 churches
+// Dummy data for 10 churches with dynamic entries
 export const dummyReports: ChurchReport[] = [
   {
     id: 'report-001',
-    churchName: 'Igreja Dili Centro',
-    region: 'Dili',
-    month: 'Junhu',
-    year: 2024,
-    persembahan: 2500.0,
-    perpuluhan: 3200.0,
-    donasaun: 800.0,
-    osanTamaSeluk: 150.0,
-    operasional: 1200.0,
-    manutensaun: 500.0,
-    programaMinisteriu: 600.0,
-    gastuSeluk: 200.0,
-  },
-  {
-    id: 'report-002',
-    churchName: 'Igreja Baucau',
+    churchName: 'Igreja Baucau Centro',
     region: 'Baucau',
     month: 'Junhu',
     year: 2024,
-    persembahan: 1800.0,
-    perpuluhan: 2400.0,
-    donasaun: 500.0,
-    osanTamaSeluk: 100.0,
-    operasional: 900.0,
-    manutensaun: 350.0,
-    programaMinisteriu: 400.0,
-    gastuSeluk: 150.0,
+    osanTama: [
+      { id: 'ot-1', deskrisaun: 'Persembahan Minggu', montante: 2500.0 },
+      { id: 'ot-2', deskrisaun: 'Perpuluhan', montante: 3200.0 },
+      { id: 'ot-3', deskrisaun: 'Donasaun Kaeruk', montante: 800.0 },
+    ],
+    gastu: [
+      { id: 'g-1', gastuBaSaida: 'Lista Kirista', montante: 800.0 },
+      { id: 'g-2', gastuBaSaida: 'Materia Construsaun', montante: 500.0 },
+      { id: 'g-3', gastuBaSaida: 'Programa Juventude', montante: 400.0 },
+    ],
+  },
+  {
+    id: 'report-002',
+    churchName: 'Igreja Lospalos',
+    region: 'Lospalos',
+    month: 'Junhu',
+    year: 2024,
+    osanTama: [
+      { id: 'ot-4', deskrisaun: 'Persembahan Minggu', montante: 1800.0 },
+      { id: 'ot-5', deskrisaun: 'Perpuluhan', montante: 2400.0 },
+    ],
+    gastu: [
+      { id: 'g-4', gastuBaSaida: 'Operasional Gereja', montante: 900.0 },
+      { id: 'g-5', gastuBaSaida: 'Reparasaun Tela', montante: 350.0 },
+    ],
   },
   {
     id: 'report-003',
-    churchName: 'Igreja Same',
-    region: 'Same',
+    churchName: 'Igreja Viqueque Centro',
+    region: 'Viqueque',
     month: 'Junhu',
     year: 2024,
-    persembahan: 1200.0,
-    perpuluhan: 1500.0,
-    donasaun: 300.0,
-    osanTamaSeluk: 80.0,
-    operasional: 650.0,
-    manutensaun: 200.0,
-    programaMinisteriu: 300.0,
-    gastuSeluk: 100.0,
+    osanTama: [
+      { id: 'ot-6', deskrisaun: 'Persembahan', montante: 1200.0 },
+      { id: 'ot-7', deskrisaun: 'Perpuluhan', montante: 1500.0 },
+      { id: 'ot-8', deskrisaun: 'Donasaun Spesial', montante: 300.0 },
+    ],
+    gastu: [
+      { id: 'g-6', gastuBaSaida: 'Gastu Listrik', montante: 250.0 },
+      { id: 'g-7', gastuBaSaida: 'Buku Sekola Domingo', montante: 300.0 },
+    ],
   },
   {
     id: 'report-004',
-    churchName: 'Igreja Liquiça',
-    region: 'Liquiça',
-    month: 'Junhu',
-    year: 2024,
-    persembahan: 1500.0,
-    perpuluhan: 2000.0,
-    donasaun: 450.0,
-    osanTamaSeluk: 120.0,
-    operasional: 800.0,
-    manutensaun: 300.0,
-    programaMinisteriu: 450.0,
-    gastuSeluk: 120.0,
-  },
-  {
-    id: 'report-005',
-    churchName: 'Igreja Maliana',
-    region: 'Maliana',
-    month: 'Junhu',
-    year: 2024,
-    persembahan: 900.0,
-    perpuluhan: 1100.0,
-    donasaun: 250.0,
-    osanTamaSeluk: 60.0,
-    operasional: 500.0,
-    manutensaun: 180.0,
-    programaMinisteriu: 220.0,
-    gastuSeluk: 80.0,
-  },
-  {
-    id: 'report-006',
-    churchName: 'Igreja Suai',
-    region: 'Suai',
-    month: 'Junhu',
-    year: 2024,
-    persembahan: 1100.0,
-    perpuluhan: 1400.0,
-    donasaun: 350.0,
-    osanTamaSeluk: 90.0,
-    operasional: 600.0,
-    manutensaun: 250.0,
-    programaMinisteriu: 350.0,
-    gastuSeluk: 110.0,
-  },
-  {
-    id: 'report-007',
-    churchName: 'Igreja Aileu',
-    region: 'Aileu',
-    month: 'Junhu',
-    year: 2024,
-    persembahan: 800.0,
-    perpuluhan: 950.0,
-    donasaun: 200.0,
-    osanTamaSeluk: 50.0,
-    operasional: 420.0,
-    manutensaun: 150.0,
-    programaMinisteriu: 180.0,
-    gastuSeluk: 70.0,
-  },
-  {
-    id: 'report-008',
     churchName: 'Igreja Manatuto',
     region: 'Manatuto',
     month: 'Junhu',
     year: 2024,
-    persembahan: 700.0,
-    perpuluhan: 850.0,
-    donasaun: 180.0,
-    osanTamaSeluk: 40.0,
-    operasional: 380.0,
-    manutensaun: 130.0,
-    programaMinisteriu: 160.0,
-    gastuSeluk: 60.0,
+    osanTama: [
+      { id: 'ot-9', deskrisaun: 'Persembahan Minggu', montante: 1500.0 },
+      { id: 'ot-10', deskrisaun: 'Perpuluhan', montante: 2000.0 },
+    ],
+    gastu: [
+      { id: 'g-8', gastuBaSaida: 'Gastu Air', montante: 200.0 },
+      { id: 'g-9', gastuBaSaida: 'Pemeliharaan Gedung', montante: 450.0 },
+    ],
+  },
+  {
+    id: 'report-005',
+    churchName: 'Igreja Baucau Leste',
+    region: 'Baucau',
+    month: 'Meiu',
+    year: 2024,
+    osanTama: [
+      { id: 'ot-11', deskrisaun: 'Persembahan', montante: 900.0 },
+      { id: 'ot-12', deskrisaun: 'Perpuluhan', montante: 1100.0 },
+    ],
+    gastu: [
+      { id: 'g-10', gastuBaSaida: 'Kontrak Pastor', montante: 500.0 },
+    ],
+  },
+  {
+    id: 'report-006',
+    churchName: 'Igreja Lospalos Utara',
+    region: 'Lospalos',
+    month: 'Meiu',
+    year: 2024,
+    osanTama: [
+      { id: 'ot-13', deskrisaun: 'Persembahan Minggu', montante: 1100.0 },
+      { id: 'ot-14', deskrisaun: 'Donasaun', montante: 350.0 },
+    ],
+    gastu: [
+      { id: 'g-11', gastuBaSaida: 'Gastu Operasional', montante: 600.0 },
+      { id: 'g-12', gastuBaSaida: 'Alat Muzik', montante: 350.0 },
+    ],
+  },
+  {
+    id: 'report-007',
+    churchName: 'Igreja Viqueque Sul',
+    region: 'Viqueque',
+    month: 'Meiu',
+    year: 2024,
+    osanTama: [
+      { id: 'ot-15', deskrisaun: 'Persembahan', montante: 800.0 },
+      { id: 'ot-16', deskrisaun: 'Perpuluhan', montante: 950.0 },
+    ],
+    gastu: [
+      { id: 'g-13', gastuBaSaida: 'Programa Anak', montante: 180.0 },
+      { id: 'g-14', gastuBaSaida: 'Gastu Transports', montante: 120.0 },
+    ],
+  },
+  {
+    id: 'report-008',
+    churchName: 'Igreja Manatuto Timur',
+    region: 'Manatuto',
+    month: 'Meiu',
+    year: 2024,
+    osanTama: [
+      { id: 'ot-17', deskrisaun: 'Persembahan Spesial', montante: 700.0 },
+      { id: 'ot-18', deskrisaun: 'Perpuluhan', montante: 850.0 },
+    ],
+    gastu: [
+      { id: 'g-15', gastuBaSaida: 'Gastu Listrik', montante: 180.0 },
+      { id: 'g-16', gastuBaSaida: 'Kontrak Penjaga', montante: 200.0 },
+    ],
   },
   {
     id: 'report-009',
-    churchName: 'Igreja Oecusse',
-    region: 'Oecusse',
-    month: 'Junhu',
+    churchName: 'Igreja Baucau Oeste',
+    region: 'Baucau',
+    month: 'Abril',
     year: 2024,
-    persembahan: 600.0,
-    perpuluhan: 750.0,
-    donasaun: 150.0,
-    osanTamaSeluk: 35.0,
-    operasional: 320.0,
-    manutensaun: 110.0,
-    programaMinisteriu: 140.0,
-    gastuSeluk: 50.0,
+    osanTama: [
+      { id: 'ot-19', deskrisaun: 'Persembahan Paskah', montante: 1600.0 },
+      { id: 'ot-20', deskrisaun: 'Perpuluhan', montante: 750.0 },
+    ],
+    gastu: [
+      { id: 'g-17', gastuBaSaida: 'Dekorasi Paskah', montante: 320.0 },
+      { id: 'g-18', gastuBaSaida: 'Gastu Makan', montante: 280.0 },
+    ],
   },
   {
     id: 'report-010',
-    churchName: 'Igreja Viqueque',
-    region: 'Viqueque',
-    month: 'Junhu',
+    churchName: 'Igreja Lospalos Selatan',
+    region: 'Lospalos',
+    month: 'Abril',
     year: 2024,
-    persembahan: 650.0,
-    perpuluhan: 800.0,
-    donasaun: 160.0,
-    osanTamaSeluk: 45.0,
-    operasional: 350.0,
-    manutensaun: 120.0,
-    programaMinisteriu: 150.0,
-    gastuSeluk: 55.0,
+    osanTama: [
+      { id: 'ot-21', deskrisaun: 'Persembahan', montante: 650.0 },
+      { id: 'ot-22', deskrisaun: 'Donasaun Anggota', montante: 400.0 },
+    ],
+    gastu: [
+      { id: 'g-19', gastuBaSaida: 'Gastu Umum', montante: 350.0 },
+      { id: 'g-20', gastuBaSaida: 'Sosialisasi', montante: 150.0 },
+    ],
   },
 ]
+
+// Comments storage (simulated)
+export let comments: Comment[] = [
+  {
+    id: 'comment-1',
+    page: 'landing',
+    author: 'Pastor João',
+    content: "Sistema ida ne'e diak tebes! Obrigadu.",
+    timestamp: new Date('2024-06-15T10:30:00'),
+  },
+  {
+    id: 'comment-2',
+    page: 'nasional',
+    author: 'Admin Geral',
+    content: 'Relatóriu husi Baucau tama ona. Diak!',
+    timestamp: new Date('2024-06-16T14:20:00'),
+  },
+]
+
+// Add comment function
+export const addComment = (page: Comment['page'], author: string, content: string): Comment => {
+  const newComment: Comment = {
+    id: generateId(),
+    page,
+    author,
+    content,
+    timestamp: new Date(),
+  }
+  comments = [...comments, newComment]
+  return newComment
+}
+
+// Get comments by page
+export const getCommentsByPage = (page: Comment['page']): Comment[] => {
+  return comments.filter((c) => c.page === page).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+}
 
 // Calculate national summary
 export const calculateNationalSummary = (reports: ChurchReport[]) => {
@@ -289,8 +328,16 @@ export const getChartData = (reports: ChurchReport[]) => {
     name: report.churchName.replace('Igreja ', ''),
     revenue: calculateTotalRevenue(report),
     expense: calculateTotalExpense(report),
-    persembahan: report.persembahan,
-    perpuluhan: report.perpuluhan,
-    donasaun: report.donasaun,
   }))
+}
+
+// Format date for comments
+export const formatDateTime = (date: Date): string => {
+  return new Intl.DateTimeFormat('pt-TL', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
 }

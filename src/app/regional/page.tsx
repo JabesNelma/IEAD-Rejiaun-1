@@ -1,31 +1,77 @@
 'use client'
 
 import { Header } from '@/components/Header'
-import { ReportForm } from '@/components/ReportForm'
-import { ChurchReport } from '@/lib/data'
+import { SummaryCard, StatCard } from '@/components/SummaryCard'
+import { ReportTable } from '@/components/ReportTable'
+import { RevenueChart } from '@/components/RevenueChart'
+import { ExpenseChart } from '@/components/ExpenseChart'
+import { RegionPieChart } from '@/components/RegionPieChart'
+import { CommentSection } from '@/components/CommentSection'
+import { dummyReports, calculateNationalSummary } from '@/lib/data'
+import { Church, TrendingUp, TrendingDown, Wallet } from 'lucide-react'
 
 export default function RegionalPage() {
-  const handleSubmit = (report: ChurchReport) => {
-    console.log('New report submitted:', report)
-    // In a real app, this would save to a database
-  }
+  const reports = dummyReports
+  const summary = calculateNationalSummary(reports)
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col">
       <Header title="Admin Regional" showHome />
 
       <div className="flex-1 py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           {/* Page Header */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Form Relatóriu Finanseiru</h2>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Dashboard Regional</h2>
             <p className="text-gray-600 mt-1">
-              Hatama relatóriu finanseiru ba igreja ida ho detalla osan tama no gastu.
+              Monitoriza relatóriu finanseiru husi igreja hotu-hotu iha nível regional.
             </p>
           </div>
 
-          {/* Report Form */}
-          <ReportForm onSubmit={handleSubmit} />
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              title="Total Igreja"
+              value={summary.totalChurches}
+              icon={Church}
+              subtitle="Igreja ho relatóriu"
+            />
+            <SummaryCard
+              title="Total Osan Tama"
+              amount={summary.totalRevenue}
+              icon={TrendingUp}
+              variant="success"
+            />
+            <SummaryCard
+              title="Total Gastu"
+              amount={summary.totalExpense}
+              icon={TrendingDown}
+              variant="danger"
+            />
+            <SummaryCard
+              title="Saldo Regional"
+              amount={summary.balance}
+              icon={Wallet}
+              variant={summary.balance >= 0 ? 'success' : 'danger'}
+            />
+          </div>
+
+          {/* Charts Row 1 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <RevenueChart reports={reports} />
+            <ExpenseChart reports={reports} />
+          </div>
+
+          {/* Charts Row 2 */}
+          <div className="grid grid-cols-1 gap-6">
+            <RegionPieChart reports={reports} />
+          </div>
+
+          {/* Report Table */}
+          <ReportTable reports={reports} />
+
+          {/* Comment Section */}
+          <CommentSection page="nasional" />
         </div>
       </div>
 
